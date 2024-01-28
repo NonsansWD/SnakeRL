@@ -1,6 +1,7 @@
 import pygame
 import sys
 import enum
+import random
 
 
 class Color(enum.Enum):
@@ -38,6 +39,7 @@ class World:
             Point(width / 2 - self.blockSize, height / 2),
             Point(width / 2 - self.blockSize * 2, height / 2),
         ]
+        self.food = self.setFood()
 
     def drawGrid(self):
         for x in range(0, self.width, self.blockSize):
@@ -59,10 +61,38 @@ class World:
                 pygame.Rect(point.x, point.y, self.blockSize, self.blockSize),
             )
 
+    def setFood(self):
+        x = (
+            random.randint(0, self.width - self.blockSize)
+            // self.blockSize
+            * self.blockSize
+        )
+        y = (
+            random.randint(0, self.height - self.blockSize)
+            // self.blockSize
+            * self.blockSize
+        )
+
+        if Point(x, y) in self.body:  # if food is on the snake, try again
+            self.setFood()
+        self.food = Point(x, y)
+
+    def drawFood(self):
+        if self.food is None:  # can't draw food if there is none
+            return
+
+        pygame.draw.rect(
+            self.screen,
+            Color.RED.value,
+            pygame.Rect(self.food.x, self.food.y, self.blockSize, self.blockSize),
+        )
 
     def main(self):
         pygame.init()
         self.drawGrid()
+        self.setFood()  # why is this needed, self.food is already set in __init__?
+        self.drawFood()
+
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
