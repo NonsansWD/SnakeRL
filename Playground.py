@@ -82,21 +82,16 @@ class World:
             ),
         )
 
-    def setFood(self):
-        x = (
-            random.randint(0, self.width - self.blockSize)
-            // self.blockSize
-            * self.blockSize
-        )
-        y = (
-            random.randint(0, self.height - self.blockSize)
-            // self.blockSize
-            * self.blockSize
-        )
+    def getRandPoint(self):
+        x = (random.randint(0, self.width) // self.blockSize) * self.blockSize
+        y = (random.randint(0, self.height) // self.blockSize) * self.blockSize
+        return Point(x, y)
 
-        if Point(x, y) in self.body:  # if food is on the snake, try again
-            self.setFood()
-        self.food = Point(x, y)
+    def setFood(self):
+        newPoint = self.getRandPoint()
+        while newPoint in self.body:  # if food is on the snake, try again
+            newPoint = self.getRandPoint()
+        self.food = newPoint
 
     def drawFood(self):
         if self.food is None:  # can't draw food if there is none
@@ -105,7 +100,9 @@ class World:
         pygame.draw.rect(
             self.screen,
             Color.RED.value,
-            pygame.Rect(self.food.x, self.food.y, self.blockSize, self.blockSize),
+            pygame.Rect(
+                self.food.x + 1, self.food.y + 1, self.blockSize - 2, self.blockSize - 2
+            ),
         )
 
     def move(self):
