@@ -4,8 +4,8 @@ import sys
 class World:
 
     def __init__(self):
-        self.width = 1000
-        self.height = 1000
+        self.width = 640
+        self.height = 640
         self.blockSize = 40
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.screen.fill((0, 0, 0))
@@ -15,13 +15,12 @@ class World:
         for x in range(0, self.width, self.blockSize):
             for y in range(0, self.height, self.blockSize):
                 rect = pygame.Rect(x, y, self.blockSize, self.blockSize)
-                pygame.draw.rect(self.screen, (200, 200, 200), rect, 1)
+                pygame.draw.rect(self.screen, (100, 100, 100), rect, 1)
     
     def main(self):
         pygame.init()
-
+        self.drawGrid()
         while True:
-            self.drawGrid()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
