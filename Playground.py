@@ -10,6 +10,14 @@ class Color(enum.Enum):
     BLACK = (0, 0, 0)
     RED = (255, 0, 0)
 
+
+class Direction(enum.Enum):
+    UP = enum.auto()
+    DOWN = enum.auto()
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -23,6 +31,8 @@ class World:
         self.blockSize = blockSize
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.screen.fill((0, 0, 0))
+
+        self.direction = Direction.RIGHT
         self.body = [  # slip into self.head and self.tail?
             Point(width / 2, height / 2),
             Point(width / 2 - self.blockSize, height / 2),
@@ -58,6 +68,17 @@ class World:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
+                if event.type == pygame.KEYDOWN:
+                    match event.key:
+                        case pygame.K_UP:
+                            self.direction = Direction.UP
+                        case pygame.K_DOWN:
+                            self.direction = Direction.DOWN
+                        case pygame.K_LEFT:
+                            self.direction = Direction.LEFT
+                        case pygame.K_RIGHT:
+                            self.direction = Direction.RIGHT
             self.drawSnake()
 
             pygame.display.update()
