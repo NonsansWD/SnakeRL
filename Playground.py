@@ -146,6 +146,10 @@ class World:
         pygame.display.set_caption(f"Snake Game | Score: {self.score} | GAME OVER")
         while True:
             for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if pygame.K_SPACE:
+                        self.__init__()
+                        self.main()
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
