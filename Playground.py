@@ -2,6 +2,7 @@ import pygame
 import sys
 import enum
 import random
+import Rewards as reward_class
 
 
 class Color(enum.Enum):
@@ -47,6 +48,8 @@ class World:
         ]
         self.food = self.setFood()
         self.score = 0
+        self.terminal = False
+        self.current_state = None
 
     def drawGrid(self):
         for x in range(0, self.width, self.blockSize):
@@ -131,6 +134,7 @@ class World:
             x += self.blockSize
         self.body.insert(0, Point(x, y))
         self.body.pop()
+        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction, self.terminal
 
     def foodCollision(self):
         if self.food == self.body[0]:
@@ -138,12 +142,14 @@ class World:
             self.setFood()
             self.drawFood()
             self.body.append(self.body[-1])
+            self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction, self.terminal
 
     def checkCollision(self):
         return self.body[0] in self.body[1:-1]
 
     def endScreen(self):
         pygame.display.set_caption(f"Snake Game | Score: {self.score} | GAME OVER")
+        self.terminal = True
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -160,6 +166,7 @@ class World:
         self.drawGrid()
         self.setFood()  # why is this needed, self.food is already set in __init__?
         self.drawFood()
+        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction, self.terminal
 
         while True:
             # handle input
