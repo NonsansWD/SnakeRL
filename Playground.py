@@ -32,12 +32,15 @@ class World:
         self.blockSize = blockSize
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.screen.fill((0, 0, 0))
+        self.clock = pygame.time.Clock()
 
         self.direction = Direction.RIGHT
-        self.body = [  # slip into self.head and self.tail?
+        self.body = [  # split into self.head and self.tail?
             Point(width / 2, height / 2),
             Point(width / 2 - self.blockSize, height / 2),
-            Point(width / 2 - self.blockSize * 2, height / 2),
+            Point(
+                width / 2 - self.blockSize * 2, height / 2
+            ),  # black square at end of tail
         ]
         self.food = self.setFood()
 
@@ -51,15 +54,33 @@ class World:
         pygame.draw.rect(
             self.screen,
             Color.WHITE.value,
-            pygame.Rect(self.body[0].x, self.body[0].y, self.blockSize, self.blockSize),
+            pygame.Rect(
+                self.body[0].x + 1,
+                self.body[0].y + 1,
+                self.blockSize - 2,
+                self.blockSize - 2,
+            ),
         )
 
-        for point in self.body[1:]:
+        for point in self.body[1:-1]:
             pygame.draw.rect(
                 self.screen,
                 Color.GREY.value,
-                pygame.Rect(point.x, point.y, self.blockSize, self.blockSize),
+                pygame.Rect(
+                    point.x + 1, point.y + 1, self.blockSize - 2, self.blockSize - 2
+                ),
             )
+        # clean up the tail
+        pygame.draw.rect(
+            self.screen,
+            Color.BLACK.value,
+            pygame.Rect(
+                self.body[-1].x + 1,
+                self.body[-1].y + 1,
+                self.blockSize - 2,
+                self.blockSize - 2,
+            ),
+        )
 
     def setFood(self):
         x = (
@@ -87,6 +108,29 @@ class World:
             pygame.Rect(self.food.x, self.food.y, self.blockSize, self.blockSize),
         )
 
+    def move(self):
+        head = self.body[0]
+        x = head.x
+        y = head.y
+        if self.direction == Direction.UP:
+            if y <= 0:
+                y = self.height
+            y -= self.blockSize
+        elif self.direction == Direction.DOWN:
+            if y >= self.height - self.blockSize:
+                y = -self.blockSize
+            y += self.blockSize
+        elif self.direction == Direction.LEFT:
+            if x <= 0:
+                x = self.width
+            x -= self.blockSize
+        elif self.direction == Direction.RIGHT:
+            if x >= self.width - self.blockSize:
+                x = -self.blockSize
+            x += self.blockSize
+        self.body.insert(0, Point(x, y))
+        self.body.pop()
+
     def main(self):
         pygame.init()
         self.drawGrid()
@@ -102,16 +146,27 @@ class World:
                 if event.type == pygame.KEYDOWN:
                     match event.key:
                         case pygame.K_UP:
+                            if self.direction == Direction.DOWN:
+                                break
                             self.direction = Direction.UP
                         case pygame.K_DOWN:
+                            if self.direction == Direction.UP:
+                                break
                             self.direction = Direction.DOWN
                         case pygame.K_LEFT:
+                            if self.direction == Direction.RIGHT:
+                                break
                             self.direction = Direction.LEFT
                         case pygame.K_RIGHT:
+                            if self.direction == Direction.LEFT:
+                                break
                             self.direction = Direction.RIGHT
             self.drawSnake()
-
+            self.move()
             pygame.display.update()
+
+            # time is an illusion
+            self.clock.tick(10)
 
 
 if __name__ == "__main__":
