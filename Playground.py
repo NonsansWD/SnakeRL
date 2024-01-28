@@ -24,6 +24,9 @@ class Point:
         self.x = x
         self.y = y
 
+    def __eq__(self, p):
+        return self.x == p.x and self.y == p.y
+
 
 class World:
     def __init__(self, width=640, height=640, blockSize=40):
@@ -43,6 +46,7 @@ class World:
             ),  # black square at end of tail
         ]
         self.food = self.setFood()
+        self.score = 0
 
     def drawGrid(self):
         for x in range(0, self.width, self.blockSize):
@@ -128,13 +132,33 @@ class World:
         self.body.insert(0, Point(x, y))
         self.body.pop()
 
+    def foodCollision(self):
+        if self.food == self.body[0]:
+            self.score += 1
+            self.setFood()
+            self.drawFood()
+            self.body.append(self.body[-1])
+
+    def checkCollision(self):
+        return self.body[0] in self.body[1:-1]
+
+    def endScreen(self):
+        pygame.display.set_caption(f"Snake Game | Score: {self.score} | GAME OVER")
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
     def main(self):
+        # setup
         pygame.init()
         self.drawGrid()
         self.setFood()  # why is this needed, self.food is already set in __init__?
         self.drawFood()
 
         while True:
+            # handle input
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -158,9 +182,16 @@ class World:
                             if self.direction == Direction.LEFT:
                                 break
                             self.direction = Direction.RIGHT
+            # draw everything
+            pygame.display.set_caption(f"Snake | Score: {self.score}")
             self.drawSnake()
             self.move()
             pygame.display.update()
+
+            # cool guys look at explosions
+            if self.checkCollision():
+                self.endScreen()
+            self.foodCollision()
 
             # time is an illusion
             self.clock.tick(10)
