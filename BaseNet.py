@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy
 
-class BaseNet(nn.module):
+class BaseNet(nn.Module):
     def __init__(self):
         super(BaseNet, self).__init__()
         self.fc1 = nn.Linear(6, 512)
