@@ -3,6 +3,7 @@ import sys
 import enum
 import random
 import Rewards as reward_class
+import DQN
 
 
 class Color(enum.Enum):
@@ -134,7 +135,34 @@ class World:
             x += self.blockSize
         self.body.insert(0, Point(x, y))
         self.body.pop()
-        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction, self.terminal
+
+    def ai_move(self, direction):
+        head = self.body[0]
+        x, y = head.x, head.y
+        self.current_state = x, y, self.food.x, self.food.y, direction, self.terminal
+        if direction == Direction.UP:
+            if y <= 0:
+                y = self.height
+            y -= self.blockSize
+        elif self.direction == Direction.DOWN:
+            if y >= self.height - self.blockSize:
+                y = -self.blockSize
+            y += self.blockSize
+        elif self.direction == Direction.LEFT:
+            if x <= 0:
+                x = self.width
+            x -= self.blockSize
+        elif self.direction == Direction.RIGHT:
+            if x >= self.width - self.blockSize:
+                x = -self.blockSize
+            x += self.blockSize
+        self.body.insert(0, Point(x, y))
+        self.body.pop()
+        self.new_state = x, y, self.food.x, self.food.y, direction, self.terminal
+        reward = reward_class.DefaultReward(self.current_state, self.new_state)
+
+        return self.new_state, reward, self.terminal
+        
 
     def foodCollision(self):
         if self.food == self.body[0]:
