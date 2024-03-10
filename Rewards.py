@@ -3,9 +3,9 @@ class DefaultReward:
 
     @staticmethod
     def reward(old_state, new_state):
-        if old_state.terminal:
+        if old_state[5]:
             return 0
-        if new_state.terminal:
+        if new_state[5]:
             return -1000
         return -1
     
@@ -14,8 +14,8 @@ class ManhattanReward:
 
     @staticmethod
     def reward(old_state, new_state):
-        if old_state.terminal:
+        if old_state[5]:
             return 0
-        if new_state.terminal:
+        if new_state[5]:
             return -1000
         return - abs(new_state[2] - new_state[0]) - abs(new_state[3] - new_state[1])

@@ -5,15 +5,28 @@ import BaseNet as net
 from Playground import Direction
 
 
-def deep_q_learning(world, episodes=1000, step_limit=1000, epsilon=10**-2, gamma=1, learning_rate=10**-3):
+def action_wrapper(action_idx):
+    if action_idx.__eq__(0):
+        direction = Direction.UP
+    elif action_idx.__eq__(1):
+        direction = Direction.DOWN
+    elif action_idx.__eq__(2):
+        direction = Direction.LEFT
+    elif action_idx.__eq__(3):
+        direction = Direction.RIGHT
+    return direction
+
+
+def deep_q_learning(world, episodes=1000, step_limit=1000, epsilon=0.5, gamma=1, learning_rate=10**-3):
     Q = net.BaseNet()
     episode_progress = []
-    actions = [Direction.DOWN, Direction.UP, Direction.LEFT, Direction.RIGHT]
+    actions = [0, 1, 2, 3]
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.SGD(Q.parameters(), lr=learning_rate)
     running_loss = 0.0
 
     for episode in range(episodes):
+        print(f'im episode: {episode + 1}')
         ep_return = 0
         final_step = step_limit
         current_state = world.current_state
@@ -23,31 +36,38 @@ def deep_q_learning(world, episodes=1000, step_limit=1000, epsilon=10**-2, gamma
                 current_action = random.choice(actions)
             else:
                 with torch.no_grad():
-                    current_action = Q(torch.from_numpy(world.current_state)) # gotta fix that and make network have one input node more so action fits in there and then take argmax
+                    current_action = np.argmax([Q(torch.from_numpy(np.append(current_state[:5], 0)).double()), Q(torch.from_numpy(np.append(current_state[:5], 1)).double()), 
+                                                Q(torch.from_numpy(np.append(current_state[:5], 2)).double()), Q(torch.from_numpy(np.append(current_state[:5], 3)).double())])
+            # actual_action = action_wrapper(current_action)
+            # print(actual_action)
             new_state, reward, done = world.ai_move(current_action)
+            # print(new_state[:5])
             
             ep_return += reward
 
             with torch.no_grad():
-                y = reward + gamma * np.max(Q(torch.from_numpy(new_state).double()).numpy()) # same as above but its late/early and too lazy for this right now
-
-            output = Q(torch.from_numpy(np.append(current_state, current_action))) # this is prolly gonna the format we use but who knows where this is going right now
+                print(torch.from_numpy(np.append(new_state[:5], 0)).double())
+                y = reward + gamma * np.max([Q(torch.from_numpy(np.append(new_state[:5], 0)).double()), Q(torch.from_numpy(np.append(new_state[:5], 1)).double()), 
+                                             Q(torch.from_numpy(np.append(new_state[:5], 2)).double()), Q(torch.from_numpy(np.append(new_state[:5], 3)).double())])
+            print(current_state[:5], current_action)
+            output = Q(torch.from_numpy(np.append(current_state[:5], current_action)).double())
             optimizer.zero_grad()
-            loss = criterion(output, y)
+            loss = criterion(output, torch.tensor(y))
             loss.backward()
             optimizer.step()
 
             running_loss += loss.item()
 
             current_state = new_state
+            print(done)
 
             if done:
                 final_step = step + 1
                 break
-            episode_progress.append(ep_return)
-            print(f'Episode {episode + 1} terminated after {final_step} steps. Total '
-                  f'Return was {ep_return} with a running loss of {running_loss/final_step} and epsilon of {epsilon}.')
+        episode_progress.append(ep_return)
+        print(f'Episode {episode + 1} terminated after {final_step} steps. Total '
+                f'Return was {ep_return} with a running loss of {running_loss/final_step} and epsilon of {epsilon}.')
         
         print('All episodes completed')
 
-        return np.array(episode_progress)
+    return np.array(episode_progress)
