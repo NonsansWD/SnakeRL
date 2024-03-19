@@ -51,25 +51,12 @@ class World:
         self.screen.fill((0, 0, 0))
         self.clock = pygame.time.Clock()
 
-        self.direction = Direction.RIGHT
-        self.body = [  # split into self.head and self.tail?
-            Point(width / 2, height / 2),
-            Point(width / 2 - self.blockSize, height / 2),
-            Point(
-                width / 2 - self.blockSize * 2, height / 2
-            ),  # black square at end of tail
-        ]
-        self.setFood()
-        self.score = 0
-        self.terminal = False
-        # self.wrapped_direction = wrapper(self.direction)
-        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
-
     def drawGrid(self):
         for x in range(0, self.width, self.blockSize):
             for y in range(0, self.height, self.blockSize):
                 rect = pygame.Rect(x, y, self.blockSize, self.blockSize)
                 pygame.draw.rect(self.screen, Color.DARKGREY.value, rect, 1)
+        pygame.display.update()
 
     def drawSnake(self):
         pygame.draw.rect(
@@ -153,35 +140,57 @@ class World:
         head = self.body[0]
         x, y = head.x, head.y
         # self.direction = direction
-        self.current_state = x, y, self.food.x, self.food.y, direction, self.terminal
-        print(direction == Direction.UP.value)
-        if direction == Direction.UP.value:
+        # print(direction == Direction.UP.value)
+
+        match direction:
+            case 0:
+                if self.direction != Direction.DOWN:
+                    self.direction = Direction.UP
+            case 1:
+                if self.direction != Direction.UP:
+                    self.direction = Direction.DOWN
+            case 2:
+                if self.direction != Direction.RIGHT:
+                    self.direction = Direction.LEFT
+            case 3:
+                if self.direction != Direction.LEFT:
+                    self.direction = Direction.RIGHT
+        self.current_state = x, y, self.food.x, self.food.y, self.direction.value, self.terminal
+
+        if self.direction == Direction.UP:
             if y <= 0:
                 y = self.height
             y -= self.blockSize
-        elif direction == Direction.DOWN.value:
+        elif self.direction == Direction.DOWN:
             if y >= self.height - self.blockSize:
                 y = -self.blockSize
             y += self.blockSize
-        elif direction == Direction.LEFT.value:
+        elif self.direction == Direction.LEFT:
             if x <= 0:
                 x = self.width
             x -= self.blockSize
-        elif direction == Direction.RIGHT.value:
+        elif self.direction == Direction.RIGHT:
             if x >= self.width - self.blockSize:
                 x = -self.blockSize
             x += self.blockSize
         self.body.insert(0, Point(x, y))
         self.body.pop()
         # self.wrapped_direction = wrapper(direction)
-        self.new_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, direction, self.terminal
+        if self.terminal == 1:
+            self.terminal = 0
+        self.new_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
+        self.terminal = 0
         reward = reward_class.DefaultReward.reward(self.current_state, self.new_state)
+        pygame.display.set_caption(f"Snake | Score: {self.score}")
+        self.drawSnake()
+        pygame.display.update()
 
         return self.new_state, reward, self.terminal
         
 
     def foodCollision(self):
         if self.food == self.body[0]:
+            self.terminal = 1
             self.score += 1
             self.setFood()
             self.drawFood()
@@ -190,11 +199,16 @@ class World:
             self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
 
     def checkCollision(self):
-        return self.body[0] in self.body[1:-1]
+        if self.body[0] in self.body[1:-1]:
+            self.terminal = 2
+            return True
+        else:
+            return False
+        # return self.body[0] in self.body[1:-1]
 
     def endScreen(self):
         pygame.display.set_caption(f"Snake Game | Score: {self.score} | GAME OVER")
-        self.terminal = True
+        self.terminal = 2
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -205,9 +219,32 @@ class World:
                     pygame.quit()
                     sys.exit()
 
+
+    def reset(self):
+        pygame.init()
+        self.screen.fill((0, 0, 0))
+        self.direction = Direction.RIGHT
+        self.body = [  # split into self.head and self.tail?
+            Point(self.width / 2, self.height / 2),
+            Point(self.width / 2 - self.blockSize, self.height / 2),
+            Point(
+                self.width / 2 - self.blockSize * 2, self.height / 2
+            ),  # black square at end of tail
+        ]
+        self.setFood()
+        self.score = 0
+        self.terminal = 0
+        # self.wrapped_direction = wrapper(self.direction)
+        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
+        self.drawGrid()
+        self.drawSnake()
+        self.drawFood()
+
+
     def main(self):
         # setup
         pygame.init()
+        self.reset()
         self.drawGrid()
         self.setFood()  # why is this needed, self.food is already set in __init__? cause its gay
         self.drawFood()
@@ -261,6 +298,6 @@ def train_model():
 
 
 if __name__ == "__main__":
-    w = World()
+    # w = World()
     # w.main()
     train_model()

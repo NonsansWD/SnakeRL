@@ -3,9 +3,11 @@ class DefaultReward:
 
     @staticmethod
     def reward(old_state, new_state):
-        if old_state[5]:
+        if old_state[5] == 1:
+            print('nomnomnomnom')
             return 0
-        if new_state[5]:
+        if new_state[5] == 2:
+            print('skill issue')
             return -1000
         return -1
     
