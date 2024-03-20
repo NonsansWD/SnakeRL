@@ -6,18 +6,6 @@ import Rewards as reward_class
 import DQN
 
 
-def wrapper(direction):
-    if direction.name == Direction.UP.name:
-        test = 0
-    elif direction.name == Direction.LEFT.name:
-        test = 1
-    elif direction.name == Direction.DOWN.name:
-        test = 2
-    elif direction.name == Direction.RIGHT.name:
-        test = 3
-    return test
-
-
 class Color(enum.Enum):
     WHITE = (255, 255, 255)
     GREY = (200, 200, 200)
@@ -155,7 +143,14 @@ class World:
             case 3:
                 if self.direction != Direction.LEFT:
                     self.direction = Direction.RIGHT
-        self.current_state = x, y, self.food.x, self.food.y, self.direction.value, self.terminal
+        self.current_state = (
+            x,
+            y,
+            self.food.x,
+            self.food.y,
+            self.direction.value,
+            self.terminal,
+        )
 
         if self.direction == Direction.UP:
             if y <= 0:
@@ -175,18 +170,22 @@ class World:
             x += self.blockSize
         self.body.insert(0, Point(x, y))
         self.body.pop()
-        # self.wrapped_direction = wrapper(direction)
         if self.terminal == 1:
             self.terminal = 0
-        self.new_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
-        self.terminal = 0
+        self.new_state = (
+            self.body[0].x,
+            self.body[0].y,
+            self.food.x,
+            self.food.y,
+            self.direction.value,
+            self.terminal,
+        )
         reward = reward_class.DefaultReward.reward(self.current_state, self.new_state)
         pygame.display.set_caption(f"Snake | Score: {self.score}")
         self.drawSnake()
         pygame.display.update()
 
         return self.new_state, reward, self.terminal
-        
 
     def foodCollision(self):
         if self.food == self.body[0]:
@@ -195,8 +194,14 @@ class World:
             self.setFood()
             self.drawFood()
             self.body.append(self.body[-1])
-            # self.wrapped_direction = wrapper(self.direction)
-            self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
+            self.current_state = (
+                self.body[0].x,
+                self.body[0].y,
+                self.food.x,
+                self.food.y,
+                self.direction.value,
+                self.terminal,
+            )
 
     def checkCollision(self):
         if self.body[0] in self.body[1:-1]:
@@ -219,7 +224,6 @@ class World:
                     pygame.quit()
                     sys.exit()
 
-
     def reset(self):
         pygame.init()
         self.screen.fill((0, 0, 0))
@@ -234,12 +238,17 @@ class World:
         self.setFood()
         self.score = 0
         self.terminal = 0
-        # self.wrapped_direction = wrapper(self.direction)
-        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
+        self.current_state = (
+            self.body[0].x,
+            self.body[0].y,
+            self.food.x,
+            self.food.y,
+            self.direction.value,
+            self.terminal,
+        )
         self.drawGrid()
         self.drawSnake()
         self.drawFood()
-
 
     def main(self):
         # setup
@@ -248,8 +257,14 @@ class World:
         self.drawGrid()
         self.setFood()  # why is this needed, self.food is already set in __init__? cause its gay
         self.drawFood()
-        # self.wrapped_direction = wrapper(self.direction)
-        self.current_state = self.body[0].x, self.body[0].y, self.food.x, self.food.y, self.direction.value, self.terminal
+        self.current_state = (
+            self.body[0].x,
+            self.body[0].y,
+            self.food.x,
+            self.food.y,
+            self.direction.value,
+            self.terminal,
+        )
 
         while True:
             # handle input
@@ -301,3 +316,4 @@ if __name__ == "__main__":
     # w = World()
     # w.main()
     train_model()
+
